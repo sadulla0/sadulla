@@ -1,0 +1,505 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f4f3ec">
+  <title>Wayfare | Travel fare calculator</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,600;1,700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      color-scheme: light;
+      --paper: #f4f3ec;
+      --white: #fffefa;
+      --ink: #19251f;
+      --muted: #727a70;
+      --line: #e5e5dc;
+      --green: #225942;
+      --green-soft: #e9f0e7;
+      --orange: #e87543;
+      --mono: 'DM Mono', monospace;
+      --sans: 'Manrope', sans-serif;
+      --serif: 'Playfair Display', Georgia, serif;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; color: var(--ink); background: var(--paper); font-family: var(--sans); font-size: 14px; }
+    button, select { font: inherit; }
+    .shell { width: min(1120px, calc(100% - 64px)); margin: auto; }
+    .topbar { height: 76px; border-bottom: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; }
+    .brand { display: flex; align-items: center; gap: 11px; color: var(--ink); text-decoration: none; font-weight: 800; font-size: 17px; letter-spacing: 0; }
+    .brand-mark { width: 34px; height: 34px; display: grid; place-items: center; background: var(--green); color: white; border-radius: 10px; }
+    .brand-mark svg { width: 19px; }
+    .top-meta { display: flex; align-items: center; gap: 11px; color: var(--muted); font-size: 12px; }
+    .live-dot { width: 7px; height: 7px; background: #68a874; border-radius: 50%; box-shadow: 0 0 0 3px #68a87422; }
+    main { padding: 45px 0 38px; }
+    .intro { display: flex; justify-content: space-between; align-items: end; margin-bottom: 28px; gap: 24px; }
+    .eyebrow, .section-label { margin: 0; font: 11px var(--mono); text-transform: uppercase; letter-spacing: 1px; color: var(--green); }
+    h1 { margin: 9px 0 5px; font: 600 clamp(36px, 5vw, 54px)/1.06 var(--serif); letter-spacing: 0; }
+    h1 em { color: var(--green); }
+    .intro-copy { color: var(--muted); margin: 0; line-height: 1.65; }
+    .algorithm-chip { flex: 0 0 auto; display: flex; gap: 9px; align-items: center; padding: 10px 13px; border: 1px solid #d9ded4; border-radius: 6px; color: var(--green); font: 11px var(--mono); background: #f8f8f2; }
+    .algorithm-chip svg { width: 16px; height: 16px; }
+    .workspace { display: grid; grid-template-columns: minmax(0, 1fr) 355px; gap: 19px; align-items: start; }
+    .panel { background: var(--white); border: 1px solid var(--line); border-radius: 8px; }
+    .calculator { padding: 23px; }
+    .panel-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 19px; }
+    .panel-head h2 { margin: 0; font-size: 15px; font-weight: 800; }
+    .step-mark { color: #8c9488; font: 11px var(--mono); }
+    .route-fields { display: grid; grid-template-columns: 1fr 38px 1fr; gap: 10px; align-items: end; }
+    .field label { display: block; margin: 0 0 8px; color: #677068; font: 10px var(--mono); letter-spacing: .5px; text-transform: uppercase; }
+    select { width: 100%; height: 46px; padding: 0 35px 0 12px; color: var(--ink); background: #fbfbf7; border: 1px solid #dedfd7; border-radius: 5px; outline: none; }
+    select:focus-visible, button:focus-visible { outline: 3px solid #e8754370; outline-offset: 2px; }
+    .swap-button { width: 38px; height: 38px; display: grid; place-items: center; margin-bottom: 4px; padding: 0; cursor: pointer; border: 1px solid var(--line); border-radius: 50%; background: white; color: var(--green); }
+    .swap-button:hover { background: var(--green-soft); }
+    .swap-button svg { width: 16px; height: 16px; }
+    .section-rule { height: 1px; margin: 21px 0; background: var(--line); }
+    .mode-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 11px; }
+    .mode-header .hint { color: #8b9189; font-size: 11px; }
+    .modes { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+    .mode { position: relative; min-height: 77px; padding: 10px 8px 9px; text-align: center; cursor: pointer; border: 1px solid #e5e5dc; border-radius: 6px; background: #fffefa; color: var(--ink); transition: border-color .16s, background .16s, transform .16s; }
+    .mode:hover { transform: translateY(-2px); border-color: #a5b9a9; }
+    .mode.active { border: 1.5px solid var(--green); background: #f0f5ed; }
+    .mode .icon { display: block; height: 22px; margin-bottom: 4px; color: var(--green); }
+    .mode svg { width: 19px; height: 19px; }
+    .mode-name { display: block; font-size: 11px; font-weight: 800; }
+    .mode-rate { display: block; margin-top: 3px; color: #858b82; font: 9px var(--mono); }
+    .passengers { display: flex; justify-content: space-between; align-items: center; }
+    .passengers strong { display: block; font-size: 12px; }
+    .passengers small { display: block; margin-top: 3px; color: var(--muted); font-size: 10px; }
+    .stepper { display: flex; align-items: center; gap: 14px; padding: 4px; border: 1px solid var(--line); border-radius: 5px; }
+    .stepper button { width: 25px; height: 25px; display: grid; place-items: center; border: 0; border-radius: 3px; background: #f1f3ed; color: var(--green); cursor: pointer; font-size: 17px; }
+    .stepper output { min-width: 14px; text-align: center; font: 12px var(--mono); }
+    .submit-button { width: 100%; height: 49px; display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 21px; border: 0; border-radius: 5px; background: var(--green); color: white; cursor: pointer; font-size: 12px; font-weight: 800; transition: background .18s, transform .18s; }
+    .submit-button:hover { background: #194832; transform: translateY(-1px); }
+    .submit-button svg { width: 17px; height: 17px; }
+    .result-panel { overflow: hidden; }
+    .result-top { position: relative; min-height: 126px; padding: 19px 20px; overflow: hidden; color: white; background: #203f32; }
+    .result-top::after { position: absolute; content: ''; inset: 0; background: linear-gradient(90deg, #203f32 4%, #203f32ed 57%, #203f3280 100%), url('https://images.unsplash.com/photo-1474487548417-781cb71495f3?auto=format&fit=crop&w=680&q=80') center 53% / cover; opacity: .94; }
+    .result-top > * { position: relative; z-index: 1; }
+    .result-top .section-label { color: #bad1bd; }
+    .fare { margin-top: 8px; font: 700 39px/1 var(--serif); }
+    .fare small { font: 12px var(--sans); color: #d4e2d7; }
+    .result-summary { margin-top: 7px; color: #d5e0d5; font-size: 10px; }
+    .result-body { padding: 17px 20px 19px; }
+    .route-line { display: flex; align-items: center; gap: 10px; margin-bottom: 17px; }
+    .route-dots { display: flex; flex-direction: column; align-items: center; gap: 3px; }
+    .route-dots i:first-child { width: 8px; height: 8px; border: 2px solid var(--green); border-radius: 50%; }
+    .route-dots i:nth-child(2) { width: 1px; height: 14px; background: #bbc7b9; }
+    .route-dots i:last-child { width: 8px; height: 8px; border-radius: 2px; background: var(--orange); }
+    .route-names { display: flex; flex: 1; flex-direction: column; gap: 8px; font-size: 11px; font-weight: 700; }
+    .distance { align-self: start; color: var(--muted); font: 10px var(--mono); }
+    .estimate-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .estimate { padding: 9px 10px; background: #f6f6f0; border-radius: 4px; }
+    .estimate span { display: block; color: var(--muted); font: 9px var(--mono); text-transform: uppercase; }
+    .estimate strong { display: block; margin-top: 4px; font-size: 12px; }
+    .route-caption { display: flex; justify-content: space-between; align-items: center; margin: 15px 0 7px; color: var(--muted); font: 9px var(--mono); text-transform: uppercase; }
+    .route-chips { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; }
+    .route-chip { padding: 4px 7px; border: 1px solid var(--line); border-radius: 3px; background: white; font-size: 9px; }
+    .route-arrow { color: #a6aaa2; font-size: 10px; }
+    .compare { margin-top: 18px; }
+    .compare-title { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 9px; }
+    .compare-title strong { font-size: 11px; }
+    .compare-title span { color: var(--muted); font: 9px var(--mono); }
+    .compare-row { display: grid; grid-template-columns: 1fr auto; padding: 9px 0; border-top: 1px solid #efefe8; font-size: 10px; }
+    .compare-row .compare-mode { display: flex; gap: 7px; align-items: center; color: #5e675f; }
+    .compare-row .compare-mode svg { width: 14px; height: 14px; color: var(--green); }
+    .compare-row strong { font: 11px var(--mono); }
+    .compare-row.selected { color: var(--green); font-weight: 800; }
+    .compare-row.selected .compare-mode { color: var(--green); }
+    .payment-box { margin-top: 15px; padding: 12px; border: 1px solid #dfe5d9; border-radius: 5px; background: #f8faf5; }
+    .payment-heading { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+    .payment-heading strong { font-size: 11px; }
+    .payment-heading span { color: var(--green); font: 9px var(--mono); text-transform: uppercase; }
+    .payment-content { display: flex; align-items: center; gap: 12px; }
+    #upi-qr { width: 116px; height: 116px; flex: 0 0 116px; display: grid; place-items: center; overflow: hidden; border: 1px solid var(--line); border-radius: 4px; background: white; color: var(--muted); font-size: 9px; text-align: center; }
+    #upi-qr img, #upi-qr canvas { display: block; max-width: 100%; max-height: 100%; }
+    .payment-details { min-width: 0; }
+    .payment-details small { display: block; color: var(--muted); font-size: 9px; }
+    .payment-amount { display: block; margin: 3px 0 8px; font: 700 20px var(--serif); }
+    .upi-id { overflow-wrap: anywhere; color: #48554a; font: 9px var(--mono); }
+    .upi-link { display: inline-flex; align-items: center; gap: 5px; margin-top: 10px; padding: 7px 9px; border-radius: 4px; background: var(--green); color: white; text-decoration: none; font-size: 9px; font-weight: 800; }
+    .upi-link:hover { background: #194832; }
+    .card-pay-button { width: 100%; min-height: 38px; margin-top: 12px; border: 1px solid var(--green); border-radius: 4px; background: white; color: var(--green); cursor: pointer; font-size: 10px; font-weight: 800; }
+    .card-pay-button:hover:not(:disabled) { background: var(--green-soft); }
+    .card-pay-button:disabled { cursor: wait; opacity: .65; }
+    .payment-status { min-height: 14px; margin: 7px 0 0; color: var(--green); font-size: 9px; line-height: 1.45; }
+    .payment-status.error { color: #a43f2d; }
+    .payment-note { margin: 9px 0 0; color: #777f75; font-size: 9px; line-height: 1.5; }
+    .footnote { margin: 12px 0 0; color: #8a9087; font-size: 9px; line-height: 1.55; }
+    .below { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 17px; }
+    .info-strip { display: flex; align-items: center; gap: 12px; min-height: 68px; padding: 12px 15px; background: #e9eee5; border-radius: 6px; }
+    .info-strip:last-child { background: #f7ece3; }
+    .info-icon { width: 31px; height: 31px; flex: 0 0 auto; display: grid; place-items: center; border-radius: 5px; background: #fffefa; color: var(--green); }
+    .info-strip:last-child .info-icon { color: var(--orange); }
+    .info-icon svg { width: 16px; height: 16px; }
+    .info-strip strong { display: block; font-size: 10px; }
+    .info-strip span { display: block; margin-top: 3px; color: #747b72; font-size: 9px; }
+    footer { display: flex; justify-content: space-between; padding: 16px 0 21px; border-top: 1px solid var(--line); color: #858b82; font: 9px var(--mono); }
+    footer span:last-child { color: var(--green); }
+    .toast { position: fixed; right: 22px; bottom: 20px; z-index: 5; padding: 11px 15px; border-radius: 5px; background: #203f32; color: white; font-size: 12px; opacity: 0; transform: translateY(8px); pointer-events: none; transition: .2s; }
+    .toast.show { opacity: 1; transform: translateY(0); }
+    @media (max-width: 780px) {
+      .shell { width: min(100% - 34px, 540px); }
+      main { padding-top: 32px; }
+      .intro { align-items: start; flex-direction: column; margin-bottom: 20px; gap: 15px; }
+      .workspace { grid-template-columns: 1fr; }
+      .result-panel { display: grid; grid-template-columns: 1fr 1fr; }
+      .result-top { min-height: 100%; }
+      .result-body { padding: 16px; }
+      .below { margin-top: 12px; }
+    }
+    @media (max-width: 480px) {
+      .shell { width: calc(100% - 26px); }
+      .topbar { height: 62px; }
+      .top-meta { font-size: 10px; }
+      main { padding-top: 26px; }
+      h1 { font-size: 39px; }
+      .calculator { padding: 17px 14px; }
+      .route-fields { grid-template-columns: 1fr 32px 1fr; gap: 6px; }
+      select { padding-left: 8px; font-size: 11px; }
+      .swap-button { width: 32px; height: 32px; }
+      .modes { gap: 5px; }
+      .mode { padding: 9px 3px; min-height: 73px; }
+      .mode-name { font-size: 10px; }
+      .mode-rate { font-size: 8px; }
+      .result-panel { grid-template-columns: 1fr; }
+      .result-top { min-height: 118px; }
+      .below { grid-template-columns: 1fr; gap: 8px; }
+      footer { font-size: 8px; }
+    }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; } }
+  </style>
+</head>
+<body>
+  <header class="topbar shell">
+    <a class="brand" href="#" aria-label="Wayfare home">
+      <span class="brand-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M4 17.5 8.5 6l3.5 8 2.2-5 5.8 8.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 19h16" stroke-linecap="round"/></svg></span>
+      wayfare<span style="color:var(--orange)">.</span>
+    </a>
+    <div class="top-meta"><span class="live-dot"></span> Fare estimates, made simple</div>
+  </header>
+  <main class="shell">
+    <section class="intro" aria-labelledby="page-title">
+      <div>
+        <p class="eyebrow">Your journey, figured out</p>
+        <h1 id="page-title">Go places.<br><em>Know the fare.</em></h1>
+        <p class="intro-copy">Find the smartest route and a fare that fits your trip.</p>
+      </div>
+      <div class="algorithm-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="5" cy="6" r="2"/><circle cx="19" cy="18" r="2"/><circle cx="17" cy="5" r="2"/><path d="M7 6h5a3 3 0 0 1 3 3v6a3 3 0 0 0 3 3M7 7l8-1" stroke-linecap="round"/></svg> Dijkstra's shortest path</div>
+    </section>
+
+    <section class="workspace" aria-label="Fare calculator">
+      <form class="panel calculator" id="fare-form">
+        <div class="panel-head"><h2>Plan your trip</h2><span class="step-mark">01 / ROUTE</span></div>
+        <div class="route-fields">
+          <div class="field"><label for="origin">From</label><select id="origin" aria-label="Starting city"></select></div>
+          <button class="swap-button" type="button" id="swap" aria-label="Swap starting and destination cities" title="Swap cities"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M7 7h13l-3-3M17 17H4l3 3" stroke-linecap="round" stroke-linejoin="round"/><path d="M20 7l-3 3M4 17l3-3" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+          <div class="field"><label for="destination">To</label><select id="destination" aria-label="Destination city"></select></div>
+        </div>
+        <div class="section-rule"></div>
+        <div class="mode-header"><span class="section-label">Choose your ride</span><span class="hint">Select a travel mode</span></div>
+        <div class="modes" role="group" aria-label="Travel mode">
+          <button type="button" class="mode active" data-mode="train" aria-pressed="true"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><rect x="5" y="3" width="14" height="15" rx="4"/><path d="M8 21l2-3m6 3-2-3M5 12h14M9 7h.01M15 7h.01" stroke-linecap="round"/></svg></span><span class="mode-name">Train</span><span class="mode-rate">from ₹1.8/km</span></button>
+          <button type="button" class="mode" data-mode="bus" aria-pressed="false"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M5 17V6a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v11M5 12h14M8 17v2m8-2v2M7 8h.01M17 8h.01" stroke-linecap="round"/><path d="M4 17h16l-1.5 3h-13L4 17Z" stroke-linejoin="round"/></svg></span><span class="mode-name">Bus</span><span class="mode-rate">from ₹1.2/km</span></button>
+          <button type="button" class="mode" data-mode="cab" aria-pressed="false"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="m5 11 2-5h10l2 5 2 2v5H3v-5l2-2Zm0 0h14m-13 7v2m12-2v2M7 15h.01M17 15h.01" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="mode-name">Cab</span><span class="mode-rate">from ₹14/km</span></button>
+          <button type="button" class="mode" data-mode="bike" aria-pressed="false"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="6" cy="16" r="4"/><circle cx="18" cy="16" r="4"/><path d="m6 16 4-8h4m4 8-5-8m-5 4h7l3 4" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="mode-name">Bike</span><span class="mode-rate">from ₹6/km</span></button>
+        </div>
+        <div class="section-rule"></div>
+        <div class="passengers"><div><strong>Travellers</strong><small>How many are going?</small></div><div class="stepper" aria-label="Number of travellers"><button type="button" id="minus" aria-label="Remove one traveller">−</button><output id="traveller-count" aria-live="polite">1</output><button type="button" id="plus" aria-label="Add one traveller">+</button></div></div>
+        <button class="submit-button" type="submit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.5"/><path d="m16 16 4.5 4.5M10.8 8v5.5m-2.7-2.7h5.4" stroke-linecap="round"/></svg> Calculate my fare</button>
+      </form>
+
+      <aside class="panel result-panel" aria-live="polite" aria-label="Fare estimate">
+        <div class="result-top"><p class="section-label">Estimated total fare</p><div class="fare" id="fare-total">₹ 324 <small>total</small></div><div class="result-summary" id="result-summary">Train · 1 traveller</div></div>
+        <div class="result-body">
+          <div class="route-line"><div class="route-dots" aria-hidden="true"><i></i><i></i><i></i></div><div class="route-names"><span id="origin-name">Delhi</span><span id="destination-name">Jaipur</span></div><span class="distance" id="distance">281 km</span></div>
+          <div class="estimate-grid"><div class="estimate"><span>Travel time</span><strong id="travel-time">5h 37m</strong></div><div class="estimate"><span>Per traveller</span><strong id="per-person">₹ 324</strong></div></div>
+          <div class="route-caption"><span>Best route</span><span id="stop-count">1 segment</span></div>
+          <div class="route-chips" id="route-chips"></div>
+          <div class="compare"><div class="compare-title"><strong>Compare fares</strong><span>SAME ROUTE</span></div><div id="compare-rows"></div></div>
+          <section class="payment-box" aria-label="Pay by UPI">
+            <div class="payment-heading"><strong>Pay this fare</strong><span>UPI · QR</span></div>
+            <div class="payment-content">
+              <div id="upi-qr" role="img" aria-label="UPI payment QR code">Preparing QR...</div>
+              <div class="payment-details">
+                <small>Amount to pay</small>
+                <strong class="payment-amount" id="upi-amount">₹ 324</strong>
+                <small>Pay to Wayfare Travel</small>
+                <span class="upi-id">9999486748-1@naviaxis</span><br>
+                <a class="upi-link" id="upi-link" href="upi://pay">Open UPI app</a>
+              </div>
+            </div>
+            <button class="card-pay-button" id="card-pay-button" type="button">Pay by credit or debit card</button>
+            <p class="payment-status" id="payment-status" role="status" aria-live="polite"></p>
+            <p class="payment-note">Confirm the payee and amount in your UPI app. This project cannot verify payment or confirm a transfer.</p>
+          </section>
+          <p class="footnote">Planning estimates only. Actual operator fares may vary by class, traffic, time and availability.</p>
+        </div>
+      </aside>
+    </section>
+
+    <section class="below" aria-label="About this calculator">
+      <div class="info-strip"><span class="info-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8 12 2.5 2.5L16 9" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><strong>Shortest route, first</strong><span>Dijkstra's algorithm finds the least-distance path.</span></div></div>
+      <div class="info-strip"><span class="info-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M4 19V5m0 14h17M8 15l3-4 3 2 5-7" stroke-linecap="round" stroke-linejoin="round"/><path d="M16 6h3v3" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><strong>Four fares, one glance</strong><span>Compare travel modes before you choose.</span></div></div>
+    </section>
+  </main>
+  <footer class="shell"><span>WAYFARE · TRAVEL FARE ESTIMATOR</span><span>Made for the journey ahead.</span></footer>
+  <div class="toast" id="toast" role="status">Fare updated for your trip.</div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="https://checkout.razorpay.com/v1/checkout.js" async></script>
+  <script>
+    'use strict';
+    const cities = {
+      'Delhi': { Jaipur: 281, Agra: 233, Chandigarh: 243, Lucknow: 554 },
+      'Jaipur': { Ahmedabad: 665, Agra: 240 },
+      'Agra': { Lucknow: 335 },
+      'Lucknow': { Varanasi: 320 },
+      'Chandigarh': { Jaipur: 507 },
+      'Ahmedabad': { Mumbai: 524 },
+      'Mumbai': { Pune: 149, Hyderabad: 709 },
+      'Pune': { Hyderabad: 560 },
+      'Hyderabad': { Bengaluru: 570, Chennai: 626 },
+      'Bengaluru': { Chennai: 346 },
+      'Varanasi': { Delhi: 821, Kolkata: 681 },
+      'Chennai': { Kolkata: 1660 },
+      'Kolkata': {}
+    };
+    const graph = Object.fromEntries(Object.keys(cities).map(city => [city, { ...cities[city] }]));
+    for (const [city, connections] of Object.entries(cities)) {
+      for (const [neighbor, distance] of Object.entries(connections)) {
+        graph[neighbor][city] = distance;
+      }
+    }
+    const modes = {
+      train: { name: 'Train', base: 35, rate: 1.03, speed: 50, icon: 'train' },
+      bus: { name: 'Bus', base: 20, rate: 1.08, speed: 42, icon: 'bus' },
+      cab: { name: 'Cab', base: 70, rate: 13.7, speed: 48, icon: 'cab' },
+      bike: { name: 'Bike', base: 15, rate: 5.2, speed: 38, icon: 'bike' }
+    };
+    const origin = document.querySelector('#origin');
+    const destination = document.querySelector('#destination');
+    const countOutput = document.querySelector('#traveller-count');
+    const modeButtons = [...document.querySelectorAll('.mode')];
+    let selectedMode = 'train';
+    let travellers = 1;
+    const upiId = '9999486748-1@naviaxis';
+    const payeeName = 'Wayfare Travel';
+    const paymentApiBase = ['localhost', '127.0.0.1'].includes(location.hostname) ? '/api' : '/.netlify/functions';
+    const paymentStatus = document.querySelector('#payment-status');
+
+    function setPaymentStatus(message, isError = false) {
+      paymentStatus.textContent = message;
+      paymentStatus.classList.toggle('error', isError);
+    }
+
+    function waitForRazorpay() {
+      return new Promise((resolve, reject) => {
+        const deadline = Date.now() + 8000;
+        const check = () => {
+          if (window.Razorpay) return resolve();
+          if (Date.now() >= deadline) return reject(new Error('Razorpay checkout could not load. Check your internet connection.'));
+          window.setTimeout(check, 100);
+        };
+        check();
+      });
+    }
+
+    function populateCities(select, selected) {
+      select.innerHTML = Object.keys(cities).map(city => `<option value="${city}" ${city === selected ? 'selected' : ''}>${city}</option>`).join('');
+    }
+    populateCities(origin, 'Delhi');
+    populateCities(destination, 'Jaipur');
+
+    function shortestPath(start, end) {
+      const distances = Object.fromEntries(Object.keys(cities).map(city => [city, Infinity]));
+      const previous = {};
+      const unvisited = new Set(Object.keys(cities));
+      distances[start] = 0;
+      while (unvisited.size) {
+        let current = null;
+        for (const city of unvisited) {
+          if (current === null || distances[city] < distances[current]) current = city;
+        }
+        if (current === null || distances[current] === Infinity) break;
+        if (current === end) break;
+        unvisited.delete(current);
+        for (const [neighbor, distance] of Object.entries(graph[current])) {
+          if (!unvisited.has(neighbor)) continue;
+          const candidate = distances[current] + distance;
+          if (candidate < distances[neighbor]) {
+            distances[neighbor] = candidate;
+            previous[neighbor] = current;
+          }
+        }
+      }
+      const path = [];
+      let city = end;
+      while (city) {
+        path.unshift(city);
+        if (city === start) break;
+        city = previous[city];
+      }
+      return { path: path[0] === start ? path : [], distance: distances[end] };
+    }
+
+    function fareFor(modeKey, km) {
+      return Math.round(modes[modeKey].base + km * modes[modeKey].rate);
+    }
+    function formatRupees(amount) {
+      return `₹ ${new Intl.NumberFormat('en-IN').format(amount)}`;
+    }
+    function formatTime(km, modeKey) {
+      const minutes = Math.round((km / modes[modeKey].speed) * 60 + 15);
+      const hours = Math.floor(minutes / 60);
+      const remaining = minutes % 60;
+      return hours ? `${hours}h ${remaining}m` : `${remaining} min`;
+    }
+    const iconMarkup = {
+      train: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><rect x="5" y="3" width="14" height="15" rx="4"/><path d="M8 21l2-3m6 3-2-3M5 12h14" stroke-linecap="round"/></svg>',
+      bus: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M5 17V6a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v11M5 12h14M8 17v2m8-2v2" stroke-linecap="round"/><path d="M4 17h16l-1.5 3h-13L4 17Z" stroke-linejoin="round"/></svg>',
+      cab: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="m5 11 2-5h10l2 5 2 2v5H3v-5l2-2Zm0 0h14m-13 7v2m12-2v2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+      bike: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="6" cy="16" r="4"/><circle cx="18" cy="16" r="4"/><path d="m6 16 4-8h4m4 8-5-8m-5 4h7l3 4" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+    };
+
+    function updateResult(showNotice = false) {
+      const start = origin.value;
+      const end = destination.value;
+      if (start === end) {
+        document.querySelector('#toast').textContent = 'Choose two different cities to plan a route.';
+        document.querySelector('#toast').classList.add('show');
+        return;
+      }
+      const { path, distance } = shortestPath(start, end);
+      if (!path.length) return;
+      const perPerson = fareFor(selectedMode, distance);
+      const total = perPerson * travellers;
+      document.querySelector('#fare-total').innerHTML = `${formatRupees(total)} <small>total</small>`;
+      document.querySelector('#result-summary').textContent = `${modes[selectedMode].name} · ${travellers} ${travellers === 1 ? 'traveller' : 'travellers'}`;
+      document.querySelector('#origin-name').textContent = start;
+      document.querySelector('#destination-name').textContent = end;
+      document.querySelector('#distance').textContent = `${distance.toLocaleString('en-IN')} km`;
+      document.querySelector('#travel-time').textContent = formatTime(distance, selectedMode);
+      document.querySelector('#per-person').textContent = formatRupees(perPerson);
+      document.querySelector('#stop-count').textContent = `${path.length - 1} ${path.length === 2 ? 'segment' : 'segments'}`;
+      document.querySelector('#route-chips').innerHTML = path.map((city, index) => `${index ? '<span class="route-arrow" aria-hidden="true">→</span>' : ''}<span class="route-chip">${city}</span>`).join('');
+      document.querySelector('#compare-rows').innerHTML = Object.entries(modes).map(([key, mode]) => `<div class="compare-row ${key === selectedMode ? 'selected' : ''}"><span class="compare-mode">${iconMarkup[key]}${mode.name}${key === selectedMode ? ' · selected' : ''}</span><strong>${formatRupees(fareFor(key, distance) * travellers)}</strong></div>`).join('');
+      const paymentUri = `upi://pay?${new URLSearchParams({ pa: upiId, pn: payeeName, am: total.toFixed(2), cu: 'INR', tn: `Wayfare ${start} to ${end}` })}`;
+      const qrContainer = document.querySelector('#upi-qr');
+      document.querySelector('#upi-amount').textContent = formatRupees(total);
+      document.querySelector('#upi-link').href = paymentUri;
+      qrContainer.replaceChildren();
+      if (window.QRCode) {
+        new QRCode(qrContainer, { text: paymentUri, width: 116, height: 116, colorDark: '#19251f', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M });
+        qrContainer.setAttribute('aria-label', `UPI QR code for ${formatRupees(total)} payable to ${payeeName}`);
+      } else {
+        qrContainer.textContent = 'QR needs an internet connection';
+        qrContainer.setAttribute('aria-label', 'QR code unavailable; use the UPI app link');
+      }
+      if (showNotice) {
+        const toast = document.querySelector('#toast');
+        toast.textContent = 'Fare updated for your trip.';
+        toast.classList.add('show');
+        window.clearTimeout(updateResult.toastTimer);
+        updateResult.toastTimer = window.setTimeout(() => toast.classList.remove('show'), 1800);
+      }
+    }
+
+    modeButtons.forEach(button => button.addEventListener('click', () => {
+      selectedMode = button.dataset.mode;
+      modeButtons.forEach(item => {
+        const active = item === button;
+        item.classList.toggle('active', active);
+        item.setAttribute('aria-pressed', String(active));
+      });
+      updateResult();
+    }));
+    document.querySelector('#swap').addEventListener('click', () => {
+      const previousOrigin = origin.value;
+      origin.value = destination.value;
+      destination.value = previousOrigin;
+      updateResult();
+    });
+    document.querySelector('#minus').addEventListener('click', () => {
+      travellers = Math.max(1, travellers - 1);
+      countOutput.value = travellers;
+      countOutput.textContent = travellers;
+      updateResult();
+    });
+    document.querySelector('#plus').addEventListener('click', () => {
+      travellers = Math.min(8, travellers + 1);
+      countOutput.value = travellers;
+      countOutput.textContent = travellers;
+      updateResult();
+    });
+    document.querySelector('#fare-form').addEventListener('submit', event => {
+      event.preventDefault();
+      updateResult(true);
+    });
+    document.querySelector('#fare-form').addEventListener('change', event => {
+      if (event.target.matches('select')) updateResult();
+    });
+    document.querySelector('#card-pay-button').addEventListener('click', async event => {
+      const button = event.currentTarget;
+      if (location.protocol === 'file:') {
+        setPaymentStatus('Start the local payment server first. Open the site from http://127.0.0.1:8787.', true);
+        return;
+      }
+      button.disabled = true;
+      setPaymentStatus('Creating a secure test order...');
+      try {
+        await waitForRazorpay();
+        const orderResponse = await fetch(`${paymentApiBase}/create-order`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ origin: origin.value, destination: destination.value, mode: selectedMode, travellers })
+        });
+        const order = await orderResponse.json();
+        if (!orderResponse.ok) throw new Error(order.error || 'Could not create the payment order.');
+        const checkout = new Razorpay({
+          key: order.key_id,
+          order_id: order.order_id,
+          amount: order.amount,
+          currency: order.currency,
+          name: 'Wayfare',
+          description: `${modes[selectedMode].name}: ${origin.value} to ${destination.value}`,
+          method: { card: true, upi: true },
+          theme: { color: '#225942' },
+          handler: async response => {
+            setPaymentStatus('Verifying payment securely...');
+            try {
+              const verification = await fetch(`${paymentApiBase}/verify-payment`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  razorpay_order_id: response.razorpay_order_id,
+                  razorpay_payment_id: response.razorpay_payment_id,
+                  razorpay_signature: response.razorpay_signature
+                })
+              });
+              const result = await verification.json();
+              if (!verification.ok) throw new Error(result.error || 'Payment verification failed.');
+              setPaymentStatus(`Payment verified. Reference: ${result.payment_id}`);
+            } catch (error) {
+              setPaymentStatus(error.message, true);
+            }
+          },
+          modal: { ondismiss: () => setPaymentStatus('Checkout closed. No payment was confirmed.') }
+        });
+        checkout.on('payment.failed', response => {
+          setPaymentStatus(response.error.description || 'Payment was not completed.', true);
+        });
+        checkout.open();
+        setPaymentStatus('Razorpay test checkout opened. Use test credentials only.');
+      } catch (error) {
+        setPaymentStatus(error.message, true);
+      } finally {
+        button.disabled = false;
+      }
+    });
+    updateResult();
+  </script>
+</body>
+</html>

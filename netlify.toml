@@ -1,0 +1,7 @@
+[build]
+  command = "mkdir -p public netlify/functions && cp travel-fare-calculator.html public/index.html && cp fare.mjs create-order.mjs verify-payment.mjs netlify/functions/"
+  publish = "public"
+  functions = "netlify/functions"
+
+[functions]
+  node_bundler = "esbuild"
